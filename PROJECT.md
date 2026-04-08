@@ -2,13 +2,13 @@
 
 ## 1. Problem Statement
 
-The U.S. defense industrial base depends on critical materials (tungsten, nickel, rare earths, titanium, cobalt, etc.) sourced through complex global supply chains. Information about these supply chains is scattered across dozens of government reports (USGS, GAO, CRS, DOE), regulatory documents (DFARS, NDAA), industry filings, and news sources. Analysts at the Center for Materials Criticality (CMC) currently spend hours manually cross-referencing these sources to answer basic supply chain questions.
+The U.S. defense industrial base depends on critical materials (tungsten, nickel, rare earths, titanium, cobalt, etc.) sourced through complex global supply chains. Information about these supply chains is scattered across dozens of government reports (USGS, GAO, CRS, DOE), regulatory documents (DFARS, NDAA), industry filings, and news sources. Analysts working in this space currently spend hours manually cross-referencing these sources to answer basic supply chain questions.
 
 This project builds a searchable knowledge base with a natural language chatbot interface that can answer supply chain questions instantly, with full source citations and verified accuracy.
 
 ## 2. Target Users
 
-- CMC analysts and researchers
+- Defense and critical materials analysts and researchers
 - DoD program managers evaluating supply chain risks
 - Policy analysts tracking critical materials legislation
 - Defense industry supply chain professionals

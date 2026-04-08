@@ -1,7 +1,7 @@
 # Critical Materials Knowledge Base (critical-materials-kb)
 
 ## Project Overview
-A hybrid RAG and GraphRAG-powered knowledge base and chatbot for querying U.S. critical materials supply chain data. Built for the Center for Materials Criticality (CMC) to enable rapid, sourced answers to supply chain questions using government reports, industry data, and open-source intelligence.
+A hybrid RAG and GraphRAG-powered knowledge base and chatbot for querying U.S. critical materials supply chain data. Enables rapid, sourced answers to supply chain questions using government reports, industry data, and open-source intelligence. Designed for defense analysts, policy researchers, and supply chain professionals.
 
 ## Core Purpose
 Allow users to ask natural language questions like:
@@ -13,7 +13,7 @@ Allow users to ask natural language questions like:
 And receive accurate, cited, verifiable answers drawn from a curated document corpus.
 
 ## Design Philosophy
-**Factual accuracy and verifiability above all else.** This tool is used by defense analysts and policy researchers who need to trust every number. The architecture prioritizes:
+**Factual accuracy and verifiability above all else.** This tool is designed for defense analysts and policy researchers who need to trust every number. The architecture prioritizes:
 1. Hybrid retrieval (vector + BM25) to catch both semantic and exact-match results
 2. Cross-encoder reranking to filter noise before the LLM sees it
 3. Self-corrective generation that verifies answers are grounded in retrieved context

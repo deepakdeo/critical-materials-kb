@@ -1,6 +1,6 @@
 # Critical Materials Knowledge Base
 
-A hybrid RAG and GraphRAG-powered knowledge base for querying U.S. critical materials supply chain data. Built for the Center for Materials Criticality (CMC) to enable rapid, sourced answers to supply chain questions using government reports, industry data, and open-source intelligence.
+A hybrid RAG and GraphRAG-powered knowledge base for querying U.S. critical materials supply chain data. Enables rapid, sourced answers to supply chain questions using government reports, industry data, and open-source intelligence. Designed for defense analysts, policy researchers, and supply chain professionals working with critical materials.
 
 ## Architecture
 
