@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Environment variables
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Data (raw documents can be large)
+data/raw/
+data/processed/
+
+# Keep graph seed data
+!data/graph/seed_data.json
+
+# Build journal (local dev provenance)
+build_journal.md
+
+# Jupyter
+.ipynb_checkpoints/
+
+# pytest
+.pytest_cache/
+
+# ruff
+.ruff_cache/
+
+# mypy
+.mypy_cache/
