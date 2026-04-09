@@ -15,7 +15,7 @@ Designed for defense analysts, policy researchers, and supply chain professional
 - **Follow-up suggestions** — AI-generated follow-up questions based on the conversation
 - **Confidence scoring** — visual confidence indicator based on verification, evidence quality, and retrieval method
 - **Multi-turn context** — conversations carry context for follow-up questions
-- **Source document library** — browse all 20 indexed documents with links to original public sources
+- **Source document library** — browse all 26 indexed documents with links to original public sources
 - **Export** — copy any answer as formatted Markdown with sources and metadata
 - **Dark mode** — full dark/light theme support
 
@@ -54,23 +54,24 @@ User Query → Query Classifier → Hybrid Retriever (Vector + BM25 + RRF)
 
 ## Document Corpus
 
-20 curated documents across 7 categories:
+26 curated documents (~2,100 chunks) across 8 categories:
 
-- **USGS** — Mineral Commodity Summaries 2025, 2026
-- **DOE** — Critical Materials Assessment 2023, CMM Program Overview 2025
-- **GAO** — Critical materials procurement and stockpile reports
+- **USGS** — Mineral Commodity Summaries 2025/2026, World Minerals Outlook (SIR 2025-5021), Global Mineral Production Maps 2025
+- **DOE** — Critical Materials Assessment 2023, CMM Program Overview 2025, Battery Supply Chain 4-Year Review 2024, National Blueprint for Lithium Batteries 2021, Supply Chain Readiness Levels 2025
+- **GAO** — Critical materials procurement (GAO-24-107176) and stockpile (GAO-24-106959) reports
 - **CRS** — Congressional Research Service reports on NDS, specialty metals, critical minerals policy
-- **DPA** — Defense Production Act Title III award announcements
+- **DPA** — Defense Production Act Title III award announcements (6K Additive, Fireweed, battery minerals, hypersonics)
 - **DFARS** — Federal Register final rule on tungsten sourcing restrictions
 - **Industry** — Company pages (Kennametal, GTP, Elmet, 6K Additive, RTX)
+- **Intelligence** — NCSC Critical Minerals Supply Chain Resilience
 
 ## Knowledge Graph
 
-67 curated nodes and 86 relationships covering:
-- 18 materials, 18 companies, 13 countries, 3 facilities
-- 7 weapon systems (F-35, M1 Abrams, Patriot, Javelin, etc.)
-- 4 regulations (DFARS 225.7018, 10 USC 4872, etc.)
-- 4 DPA Title III awards
+111 curated nodes and 189 relationships covering:
+- 18 materials, 39 companies, 22 countries, 8 facilities
+- 12 weapon systems (F-35, B-21 Raider, M1 Abrams, THAAD, DDG-51, etc.)
+- 6 regulations (DFARS 225.7018, 10 USC 4872, EO 14017, etc.)
+- 6 DPA Title III awards
 
 ## Setup
 
@@ -139,6 +140,31 @@ The frontend runs at http://localhost:5173 and proxies API requests to the backe
 pytest
 ruff check src/ tests/
 ```
+
+## Deployment
+
+### Backend (Render)
+
+1. Go to [render.com](https://render.com) and create a new **Web Service**
+2. Connect your GitHub repo (`deepakdeo/critical-materials-kb`)
+3. Settings:
+   - **Root Directory:** (leave empty — repo root)
+   - **Build Command:** `pip install -e .`
+   - **Start Command:** `uvicorn src.api.main:app --host 0.0.0.0 --port $PORT`
+   - **Python Version:** 3.11.9
+4. Add environment variables: `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `SUPABASE_URL`, `SUPABASE_KEY`, `SUPABASE_SERVICE_KEY`, `NEO4J_URI`, `NEO4J_USER`, `NEO4J_PASSWORD`
+5. Deploy — first request will be slow (downloads reranker model ~80MB)
+
+### Frontend (Vercel)
+
+1. Go to [vercel.com](https://vercel.com) and import the GitHub repo
+2. Settings:
+   - **Root Directory:** `frontend-react`
+   - **Framework Preset:** Vite
+   - **Build Command:** `npm run build`
+   - **Output Directory:** `dist`
+3. Add environment variable: `VITE_API_URL` = your Render backend URL (e.g., `https://critical-materials-kb-api.onrender.com`)
+4. Deploy
 
 ## Project Structure
 
