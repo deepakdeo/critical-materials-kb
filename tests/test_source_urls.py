@@ -58,9 +58,9 @@ class TestSourceUrlMapIntegrity:
                 assert len(url) > 10, f"{name} has suspiciously short URL: {url}"
 
     def test_expected_source_count(self) -> None:
-        # We have 20 real documents + Knowledge Graph (None)
+        # We have 26 real documents + Knowledge Graph (None)
         real_sources = [k for k, v in SOURCE_URL_MAP.items() if v is not None]
-        assert len(real_sources) == 20
+        assert len(real_sources) == 26
 
     def test_key_documents_present(self) -> None:
         """Verify critical documents are in the map."""

@@ -59,6 +59,32 @@ SOURCE_URL_MAP: dict[str, str] = {
     "6k-additive.html": "https://www.6kinc.com",
     "rtx-hmi.html": "https://www.rtx.com",
 
+    # DOE — Battery and Supply Chain Reports
+    "doe-battery-supply-chain-review-2024.pdf": (
+        "https://www.energy.gov/sites/default/files/2024-12/"
+        "20212024-Four%20Year%20Review%20of%20Supply%20Chains%20for%20the%20"
+        "Advanced%20Batteries%20Sector.pdf"
+    ),
+    "doe-lithium-battery-blueprint-2021.pdf": (
+        "https://www.energy.gov/sites/default/files/2021-06/"
+        "FCAB%20National%20Blueprint%20Lithium%20Batteries%200621_0.pdf"
+    ),
+    "doe-supply-chain-readiness-2025.pdf": (
+        "https://www.energy.gov/sites/default/files/2025-01/"
+        "Identifying_Risks_in_the_Energy_Industrial_Base-"
+        "Supply_Chain_Readiness_Levels_vFinalPublication.pdf"
+    ),
+
+    # USGS — Minerals Outlook and Maps
+    "usgs-sir-2025-5021.pdf": "https://pubs.usgs.gov/sir/2025/5021/sir20255021.pdf",
+    "usgs-global-minerals-map-2025.pdf": "https://pubs.usgs.gov/fs/2025/3038/fs20253038.pdf",
+
+    # Intelligence Community
+    "ncsc-critical-minerals.pdf": (
+        "https://www.dni.gov/files/NCSC/documents/supplychain/"
+        "Critical_Minerals_Supply_Chain_Resilience.pdf"
+    ),
+
     # Knowledge Graph (special case)
     "Knowledge Graph": None,
 }
