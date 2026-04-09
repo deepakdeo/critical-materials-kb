@@ -34,7 +34,7 @@ class Settings(BaseSettings):
     cohere_api_key: str = ""
     embedding_model: str = "text-embedding-3-small"
     llm_model: str = "claude-sonnet-4-20250514"
-    reranker_model: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"
+    reranker_model: str = "rerank-english-v3.0"
 
     # Chunking constants
     chunk_size_target: int = Field(default=750, description="Target chunk size in tokens")

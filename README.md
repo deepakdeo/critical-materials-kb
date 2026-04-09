@@ -49,7 +49,7 @@ User Query → Query Classifier → Hybrid Retriever (Vector + BM25 + RRF)
 | Database | Supabase (PostgreSQL + pgvector + FTS) |
 | Knowledge Graph | Neo4j AuraDB |
 | Embeddings | OpenAI text-embedding-3-small |
-| Reranker | cross-encoder/ms-marco-MiniLM-L-6-v2 (local) |
+| Reranker | Cohere Rerank API (rerank-english-v3.0) |
 | LLM | Claude (Anthropic API) |
 
 ## Document Corpus
@@ -82,6 +82,7 @@ User Query → Query Classifier → Hybrid Retriever (Vector + BM25 + RRF)
 - [Supabase](https://supabase.com/) project with pgvector enabled
 - OpenAI API key (embeddings)
 - Anthropic API key (generation)
+- Cohere API key (reranker — [free tier](https://dashboard.cohere.com/api-keys))
 - Neo4j AuraDB instance (knowledge graph)
 
 ### Installation
@@ -152,8 +153,8 @@ ruff check src/ tests/
    - **Build Command:** `pip install -e .`
    - **Start Command:** `uvicorn src.api.main:app --host 0.0.0.0 --port $PORT`
    - **Python Version:** 3.11.9
-4. Add environment variables: `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `SUPABASE_URL`, `SUPABASE_KEY`, `SUPABASE_SERVICE_KEY`, `NEO4J_URI`, `NEO4J_USER`, `NEO4J_PASSWORD`
-5. Deploy — first request will be slow (downloads reranker model ~80MB)
+4. Add environment variables: `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `COHERE_API_KEY`, `SUPABASE_URL`, `SUPABASE_KEY`, `SUPABASE_SERVICE_KEY`, `NEO4J_URI`, `NEO4J_USER`, `NEO4J_PASSWORD`
+5. Deploy
 
 ### Frontend (Vercel)
 

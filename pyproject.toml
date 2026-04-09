@@ -37,8 +37,8 @@ dependencies = [
     "pydantic>=2.5.0",
     "pydantic-settings>=2.1.0",
 
-    # Retrieval (cross-encoder reranker)
-    "sentence-transformers>=2.7.0,<3.0.0",
+    # Retrieval (Cohere Rerank API — avoids shipping torch/CUDA wheels)
+    "cohere>=5.0.0",
 
     # API
     "fastapi>=0.111.0",
