@@ -1,10 +1,40 @@
+// Curated example questions spanning all six query categories and a
+// cross-section of the corpus (tungsten, battery minerals, rare earths,
+// gallium, DFARS, DOE critical materials list). Drawn from the golden
+// eval set so first-time users see queries the pipeline handles well.
 const EXAMPLE_QUERIES = [
-  'What is the current U.S. import reliance for tungsten?',
-  'Which U.S. companies can produce tungsten?',
-  'If China cuts tungsten exports, which DoD programs are affected?',
-  'What DPA Title III awards have been made for tungsten?',
-  'When does the DFARS tungsten restriction take effect?',
-  'What materials has DOE classified as critical for energy?',
+  {
+    category: 'Factual',
+    text: 'What is the current U.S. import reliance for tungsten?',
+  },
+  {
+    category: 'Factual',
+    text: 'Which country is the largest global producer of tungsten?',
+  },
+  {
+    category: 'Relational',
+    text: 'Which U.S. companies produce tungsten powder?',
+  },
+  {
+    category: 'Relational',
+    text: 'Which DPA Title III awards have been made for critical battery minerals?',
+  },
+  {
+    category: 'Analytical',
+    text: 'If China cuts tungsten exports, which DoD applications would be affected?',
+  },
+  {
+    category: 'Regulatory',
+    text: 'What compliance requirements exist for tungsten in DoD contracts?',
+  },
+  {
+    category: 'Comparative',
+    text: 'How do U.S. and Chinese tungsten production levels compare?',
+  },
+  {
+    category: 'Policy',
+    text: 'How has U.S. critical materials policy evolved since 2020?',
+  },
 ]
 
 export default function WelcomeScreen({ onSelectQuery }) {
@@ -35,10 +65,15 @@ export default function WelcomeScreen({ onSelectQuery }) {
             {EXAMPLE_QUERIES.map((q, i) => (
               <button
                 key={i}
-                onClick={() => onSelectQuery(q)}
-                className="text-left px-4 py-3 text-sm text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl hover:border-blue-300 dark:hover:border-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                onClick={() => onSelectQuery(q.text)}
+                className="group text-left px-4 py-3 text-sm bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl hover:border-blue-300 dark:hover:border-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
               >
-                {q}
+                <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 group-hover:text-blue-500 dark:group-hover:text-blue-400 mb-1">
+                  {q.category}
+                </div>
+                <div className="text-slate-600 dark:text-slate-300 leading-snug">
+                  {q.text}
+                </div>
               </button>
             ))}
           </div>
