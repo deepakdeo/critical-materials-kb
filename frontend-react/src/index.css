@@ -1,0 +1,55 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+.dark ::-webkit-scrollbar-thumb { background: #475569; }
+
+/* Markdown content styling */
+.answer-content h1, .answer-content h2, .answer-content h3 {
+  font-weight: 600;
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+}
+.answer-content h1 { font-size: 1.25rem; }
+.answer-content h2 { font-size: 1.125rem; }
+.answer-content h3 { font-size: 1rem; }
+.answer-content p { margin-bottom: 0.75em; line-height: 1.7; }
+.answer-content ul, .answer-content ol { margin-bottom: 0.75em; padding-left: 1.5em; }
+.answer-content li { margin-bottom: 0.25em; line-height: 1.6; }
+.answer-content strong { font-weight: 600; }
+.answer-content ul { list-style-type: disc; }
+.answer-content ol { list-style-type: decimal; }
+.answer-content blockquote {
+  border-left: 3px solid #3b82f6;
+  padding-left: 1em;
+  margin: 0.75em 0;
+  color: #475569;
+}
+.dark .answer-content blockquote {
+  border-left-color: #60a5fa;
+  color: #94a3b8;
+}
+.answer-content code {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+  background: #f1f5f9;
+}
+.dark .answer-content code { background: #334155; }
