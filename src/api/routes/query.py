@@ -30,10 +30,19 @@ def query_endpoint(request: QueryRequest) -> QueryResponseModel:
     materials = request.filters.get("materials")
     doc_types = request.filters.get("doc_types")
 
+    # Build conversation context for multi-turn
+    context = None
+    if request.conversation_context:
+        context = [
+            {"question": t.question, "answer": t.answer}
+            for t in request.conversation_context
+        ]
+
     response = run_query(
         question=request.question,
         materials=materials,
         doc_types=doc_types,
+        conversation_context=context,
     )
 
     sources = [
@@ -42,9 +51,11 @@ def query_endpoint(request: QueryRequest) -> QueryResponseModel:
             page=s.page,
             section=s.section,
             relevance_score=s.relevance_score,
+            chunk_text=s.chunk_text,
+            source_url=s.source_url,
         )
         for s in response.sources
-    ]
+    ] if request.include_sources else []
 
     verification = VerificationResponse(
         verdict=response.verification.verdict,
@@ -54,7 +65,9 @@ def query_endpoint(request: QueryRequest) -> QueryResponseModel:
 
     return QueryResponseModel(
         answer=response.answer,
-        sources=sources if request.include_sources else [],
+        sources=sources,
         verification=verification,
         metadata=response.metadata,
+        follow_up_questions=response.follow_up_questions,
+        graph_data=response.graph_data,
     )

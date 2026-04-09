@@ -5,12 +5,20 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 
+class ConversationTurn(BaseModel):
+    """A previous Q&A turn for multi-turn context."""
+
+    question: str = ""
+    answer: str = ""
+
+
 class QueryRequest(BaseModel):
     """Request body for the /query endpoint."""
 
     question: str
     filters: dict[str, Any] = Field(default_factory=dict)
     include_sources: bool = True
+    conversation_context: list[ConversationTurn] = Field(default_factory=list)
 
 
 class SourceResponse(BaseModel):
@@ -20,6 +28,8 @@ class SourceResponse(BaseModel):
     page: str = ""
     section: str = ""
     relevance_score: float = 0.0
+    chunk_text: str = ""
+    source_url: str | None = None
 
 
 class VerificationResponse(BaseModel):
@@ -39,6 +49,8 @@ class QueryResponseModel(BaseModel):
         default_factory=VerificationResponse
     )
     metadata: dict[str, Any] = Field(default_factory=dict)
+    follow_up_questions: list[str] = Field(default_factory=list)
+    graph_data: dict[str, Any] = Field(default_factory=dict)
 
 
 class HealthResponse(BaseModel):
@@ -47,3 +59,10 @@ class HealthResponse(BaseModel):
     status: str = "ok"
     document_count: int = 0
     chunk_count: int = 0
+
+
+class SourceDocumentResponse(BaseModel):
+    """A source document with its public URL."""
+
+    name: str
+    url: str | None = None

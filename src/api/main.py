@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.api.routes.health import router as health_router
 from src.api.routes.query import router as query_router
+from src.api.routes.sources import router as sources_router
 
 app = FastAPI(
     title="Critical Materials Knowledge Base",
@@ -25,3 +26,4 @@ app.add_middleware(
 
 app.include_router(health_router, prefix="/api")
 app.include_router(query_router, prefix="/api")
+app.include_router(sources_router, prefix="/api")

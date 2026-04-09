@@ -62,11 +62,17 @@ def format_context(chunks: list) -> str:
     parts = []
     for i, chunk in enumerate(chunks, start=1):
         source_name = chunk.metadata.get("source_name", "") or chunk.source
-        section = chunk.section_title or "N/A"
+        section = chunk.section_title or ""
         pages = chunk.page_numbers
-        page_str = f"p.{','.join(str(p) for p in pages)}" if pages else "N/A"
+        page_str = f"p.{','.join(str(p) for p in pages)}" if pages else ""
 
-        header = f"[Source {i}: {source_name}, {page_str}, Section: {section}]"
+        # Build header parts, omitting empty fields
+        parts_list = [f"Source {i}: {source_name}"]
+        if page_str:
+            parts_list.append(page_str)
+        if section:
+            parts_list.append(f"Section: {section}")
+        header = f"[{', '.join(parts_list)}]"
         parts.append(f"{header}\n{chunk.text}")
 
     return "\n\n---\n\n".join(parts)
