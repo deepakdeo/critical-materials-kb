@@ -109,6 +109,23 @@ def main() -> None:
         help="Force re-ingestion (delete existing and re-ingest).",
     )
     parser.add_argument(
+        "--extract-entities",
+        action="store_true",
+        help="Extract entities from chunks and add to the knowledge graph.",
+    )
+    parser.add_argument(
+        "--entity-max-chunks",
+        type=int,
+        default=10,
+        help="Max chunks to run entity extraction on per document (default: 10).",
+    )
+    parser.add_argument(
+        "--entity-min-confidence",
+        type=float,
+        default=0.7,
+        help="Min confidence for extracted entities to be added (default: 0.7).",
+    )
+    parser.add_argument(
         "--verbose", "-v",
         action="store_true",
         help="Enable verbose/debug logging.",
@@ -143,6 +160,9 @@ def main() -> None:
             source_url=args.source_url,
             date_published=args.date_published,
             force=args.force,
+            extract_entities=args.extract_entities,
+            entity_max_chunks=args.entity_max_chunks,
+            entity_min_confidence=args.entity_min_confidence,
         )
         summaries.append(summary)
 
@@ -151,7 +171,13 @@ def main() -> None:
         elif summary.errors:
             print(f"ERROR: {summary.errors[0]}")
         else:
-            print(f"OK ({summary.chunks_created} chunks)")
+            entity_info = ""
+            if summary.entities_extracted or summary.relationships_extracted:
+                entity_info = (
+                    f", {summary.entities_extracted} entities, "
+                    f"{summary.relationships_extracted} rels"
+                )
+            print(f"OK ({summary.chunks_created} chunks{entity_info})")
 
     # Print summary
     print("-" * 60)

@@ -25,6 +25,8 @@ class IngestionSummary(BaseModel):
     skipped: bool = False
     skip_reason: str = ""
     document_id: str = ""
+    entities_extracted: int = 0
+    relationships_extracted: int = 0
     errors: list[str] = Field(default_factory=list)
 
 
@@ -51,6 +53,9 @@ def ingest_document(
     source_url: str = "",
     date_published: str | None = None,
     force: bool = False,
+    extract_entities: bool = False,
+    entity_max_chunks: int = 10,
+    entity_min_confidence: float = 0.7,
 ) -> IngestionSummary:
     """Ingest a single document through the full pipeline.
 
@@ -164,4 +169,30 @@ def ingest_document(
         len(chunks),
         summary.document_id,
     )
+
+    # Step 8 (optional): Extract entities and add to knowledge graph
+    if extract_entities:
+        try:
+            from src.graph.builder import add_extracted_entities
+            from src.ingest.entity_extractor import extract_entities_from_chunks
+
+            nodes, rels = extract_entities_from_chunks(
+                chunks, max_chunks=entity_max_chunks
+            )
+            if nodes or rels:
+                result = add_extracted_entities(
+                    nodes, rels, min_confidence=entity_min_confidence
+                )
+                summary.entities_extracted = result["nodes_added"]
+                summary.relationships_extracted = result["relationships_added"]
+                logger.info(
+                    "Entity extraction for '%s': %d nodes, %d relationships added to graph",
+                    path.name,
+                    summary.entities_extracted,
+                    summary.relationships_extracted,
+                )
+        except Exception as e:
+            logger.warning("Entity extraction failed for '%s': %s", path.name, e)
+            summary.errors.append(f"Entity extraction error (non-fatal): {e}")
+
     return summary
