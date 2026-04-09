@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 
 from src.generation.generator import generate_answer
 from src.generation.verifier import VerificationResult, verify_answer
+from src.retrieval.graph_retriever import graph_search
 from src.retrieval.hybrid_retriever import hybrid_search
 from src.retrieval.query_classifier import QueryType, classify_query
 from src.retrieval.reranker import rerank
@@ -76,21 +77,34 @@ def query(
 
     # Step 2: Determine doc_type filter from classification
     doc_type_filter = None
-    if query_type == QueryType.REGULATORY and not doc_types:
-        doc_type_filter = "regulatory"
-    elif doc_types and len(doc_types) == 1:
+    if doc_types and len(doc_types) == 1:
         doc_type_filter = doc_types[0]
 
-    # Step 3: Hybrid retrieval
+    # Step 3: Graph retrieval (relational, analytical, and regulatory queries)
+    graph_results: list[RetrievalResult] = []
+    retrieval_method = "hybrid"
+    if query_type in (QueryType.RELATIONAL, QueryType.ANALYTICAL, QueryType.REGULATORY):
+        try:
+            graph_results = graph_search(question)
+            if graph_results:
+                retrieval_method = "hybrid+graph"
+                logger.info("Graph retrieval returned %d results", len(graph_results))
+        except Exception as e:
+            logger.warning("Graph retrieval failed, falling back to hybrid only: %s", e)
+
+    # Step 4: Hybrid retrieval
     hybrid_results = hybrid_search(
         query=question,
         materials=materials,
         doc_type=doc_type_filter,
     )
-    chunks_retrieved = len(hybrid_results)
 
-    # Step 4: Cross-encoder reranking
-    reranked = rerank(query=question, results=hybrid_results)
+    # Merge graph + hybrid results (graph results prepended for priority)
+    combined_results = graph_results + hybrid_results
+    chunks_retrieved = len(combined_results)
+
+    # Step 5: Cross-encoder reranking
+    reranked = rerank(query=question, results=combined_results)
     chunks_after_rerank = len(reranked)
 
     # Step 5: Generate answer
@@ -136,7 +150,7 @@ def query(
         verification=verification,
         metadata={
             "query_type": query_type.value,
-            "retrieval_method": "hybrid",
+            "retrieval_method": retrieval_method,
             "chunks_retrieved": chunks_retrieved,
             "chunks_after_rerank": chunks_after_rerank,
             "latency_ms": elapsed_ms,
