@@ -38,7 +38,7 @@
       "question": "Who received DPA Title III funding for tungsten additive manufacturing?",
       "expected_verdict": "PASS",
       "min_confidence": 0.70,
-      "must_cite_any": ["dpa-6k-additive-2023.html"],
+      "must_cite_any": ["dpa-6k-additive-2023.html", "Knowledge Graph", "6k-additive.html", "R47833.2.pdf"],
       "must_mention_any": ["6K Additive", "DPA", "Title III"],
       "must_not_contain": []
     },
@@ -152,7 +152,7 @@
       "question": "What are the differences between DOE and USGS critical minerals lists?",
       "expected_verdict": "PASS",
       "min_confidence": 0.55,
-      "must_cite_any": ["doe-critical-materials-assessment-2023.pdf", "mcs2025.pdf", "mcs2026.pdf"],
+      "must_cite_any": ["doe-critical-materials-assessment-2023.pdf", "mcs2025.pdf", "mcs2026.pdf", "R47982.19.pdf", "R47833.2.pdf"],
       "must_mention_any": ["DOE", "USGS", "critical"],
       "must_not_contain": []
     },
