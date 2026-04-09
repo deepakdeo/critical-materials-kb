@@ -1,0 +1,216 @@
+{
+  "description": "Golden Q/A set for regression testing the critical-materials-kb pipeline. Questions are graded by rubric (must-cite, must-mention, must-not-contain) rather than exact answer match, because LLM responses vary. Unanswerable questions verify the CRAG verifier and fallback path.",
+  "version": 1,
+  "questions": [
+    {
+      "id": "factual_001",
+      "category": "factual",
+      "question": "What is the U.S. net import reliance for tungsten?",
+      "expected_verdict": "PASS",
+      "min_confidence": 0.70,
+      "must_cite_any": ["mcs2025.pdf", "mcs2026.pdf", "gao-24-107176.pdf"],
+      "must_mention_any": ["50%", "net import reliance", "imports"],
+      "must_not_contain": []
+    },
+    {
+      "id": "factual_002",
+      "category": "factual",
+      "question": "Which country is the largest global producer of tungsten?",
+      "expected_verdict": "PASS",
+      "min_confidence": 0.70,
+      "must_cite_any": ["mcs2025.pdf", "mcs2026.pdf", "gao-24-107176.pdf"],
+      "must_mention_any": ["China"],
+      "must_not_contain": []
+    },
+    {
+      "id": "factual_003",
+      "category": "factual",
+      "question": "What does DFARS 225.7018 restrict?",
+      "expected_verdict": "PASS",
+      "min_confidence": 0.65,
+      "must_cite_any": ["dfars-225.7018-final-rule-2024.pdf", "IF11226.12.html"],
+      "must_mention_any": ["tungsten", "specialty metal", "sourcing", "restrict"],
+      "must_not_contain": []
+    },
+    {
+      "id": "factual_004",
+      "category": "factual",
+      "question": "Who received DPA Title III funding for tungsten additive manufacturing?",
+      "expected_verdict": "PASS",
+      "min_confidence": 0.70,
+      "must_cite_any": ["dpa-6k-additive-2023.html"],
+      "must_mention_any": ["6K Additive", "DPA", "Title III"],
+      "must_not_contain": []
+    },
+    {
+      "id": "factual_005",
+      "category": "factual",
+      "question": "What is the DOE Supply Chain Readiness Level framework?",
+      "expected_verdict": "PASS",
+      "min_confidence": 0.65,
+      "must_cite_any": ["doe-supply-chain-readiness-2025.pdf"],
+      "must_mention_any": ["readiness", "supply chain", "DOE"],
+      "must_not_contain": []
+    },
+
+    {
+      "id": "relational_001",
+      "category": "relational",
+      "question": "Which U.S. companies produce tungsten powder?",
+      "expected_verdict": "PASS",
+      "min_confidence": 0.65,
+      "must_cite_any": ["kennametal-tungsten-powders.html", "gtp-about.html", "elmet-kep.html", "6k-additive.html"],
+      "must_mention_any": ["Kennametal", "Global Tungsten", "GTP", "Elmet", "6K"],
+      "must_not_contain": []
+    },
+    {
+      "id": "relational_002",
+      "category": "relational",
+      "question": "Which DPA Title III awards have been made for critical battery minerals?",
+      "expected_verdict": "PASS",
+      "min_confidence": 0.65,
+      "must_cite_any": ["dpa-battery-minerals-2022.html", "doe-battery-supply-chain-review-2024.pdf"],
+      "must_mention_any": ["DPA", "battery", "Title III"],
+      "must_not_contain": []
+    },
+    {
+      "id": "relational_003",
+      "category": "relational",
+      "question": "Which critical materials does Fireweed Metals' MacTung project produce?",
+      "expected_verdict": "PASS",
+      "min_confidence": 0.60,
+      "must_cite_any": ["dpa-fireweed-mactung-2024.html"],
+      "must_mention_any": ["tungsten", "MacTung", "Fireweed"],
+      "must_not_contain": []
+    },
+
+    {
+      "id": "analytical_001",
+      "category": "analytical",
+      "question": "If China cuts tungsten exports, which DoD applications would be affected?",
+      "expected_verdict": "PASS",
+      "min_confidence": 0.65,
+      "must_cite_any": ["mcs2025.pdf", "mcs2026.pdf", "gao-24-107176.pdf", "IF11226.12.html"],
+      "must_mention_any": ["DoD", "weapon", "kinetic", "penetrator", "armor", "ammunition", "missile"],
+      "must_not_contain": []
+    },
+    {
+      "id": "analytical_002",
+      "category": "analytical",
+      "question": "Why does the U.S. government restrict specialty metal sourcing in defense contracts?",
+      "expected_verdict": "PASS",
+      "min_confidence": 0.65,
+      "must_cite_any": ["dfars-225.7018-final-rule-2024.pdf", "IF11226.12.html", "R47833.2.pdf"],
+      "must_mention_any": ["NDAA", "DFARS", "specialty metal", "domestic", "defense"],
+      "must_not_contain": []
+    },
+    {
+      "id": "analytical_003",
+      "category": "analytical",
+      "question": "How has U.S. critical materials policy evolved since 2020?",
+      "expected_verdict": "PASS",
+      "min_confidence": 0.60,
+      "must_cite_any": ["R47833.2.pdf", "R47982.19.pdf", "doe-critical-materials-assessment-2023.pdf"],
+      "must_mention_any": ["DPA", "executive order", "policy", "2022", "2023", "2024"],
+      "must_not_contain": []
+    },
+
+    {
+      "id": "regulatory_001",
+      "category": "regulatory",
+      "question": "What compliance requirements exist for tungsten in DoD contracts?",
+      "expected_verdict": "PASS",
+      "min_confidence": 0.65,
+      "must_cite_any": ["dfars-225.7018-final-rule-2024.pdf", "IF11226.12.html"],
+      "must_mention_any": ["DFARS", "compliance", "certify", "sourcing", "specialty metal"],
+      "must_not_contain": []
+    },
+    {
+      "id": "regulatory_002",
+      "category": "regulatory",
+      "question": "What is the National Defense Stockpile and how is it managed?",
+      "expected_verdict": "PASS",
+      "min_confidence": 0.65,
+      "must_cite_any": ["gao-24-106959.pdf", "gao-24-107176.pdf"],
+      "must_mention_any": ["stockpile", "NDS", "DLA", "Defense Logistics", "strategic"],
+      "must_not_contain": []
+    },
+
+    {
+      "id": "comparative_001",
+      "category": "comparative",
+      "question": "How do U.S. and Chinese tungsten production levels compare?",
+      "expected_verdict": "PASS",
+      "min_confidence": 0.65,
+      "must_cite_any": ["mcs2025.pdf", "mcs2026.pdf"],
+      "must_mention_any": ["China", "metric tons", "production", "U.S."],
+      "must_not_contain": []
+    },
+    {
+      "id": "comparative_002",
+      "category": "comparative",
+      "question": "What are the differences between DOE and USGS critical minerals lists?",
+      "expected_verdict": "PASS",
+      "min_confidence": 0.55,
+      "must_cite_any": ["doe-critical-materials-assessment-2023.pdf", "mcs2025.pdf", "mcs2026.pdf"],
+      "must_mention_any": ["DOE", "USGS", "critical"],
+      "must_not_contain": []
+    },
+
+    {
+      "id": "unanswerable_001",
+      "category": "unanswerable",
+      "_note": "expected_verdict omitted: a smart refusal passes verification; content checks (refusal keywords + no fabricated numbers) do the real work.",
+      "question": "How long would current U.S. tungsten stockpiles last if China completely stopped exports?",
+      "expected_verdict": null,
+      "min_confidence": 0.0,
+      "must_cite_any": [],
+      "must_mention_any": ["insufficient", "not", "without", "cannot", "withheld", "unknown", "does not"],
+      "must_not_contain": ["will last exactly", "will last for", "the stockpile will last"]
+    },
+    {
+      "id": "unanswerable_002",
+      "category": "unanswerable",
+      "_note": "expected_verdict omitted: a smart refusal passes verification; content checks (refusal keywords + no fabricated numbers) do the real work.",
+      "question": "Will China impose tungsten export restrictions in 2027?",
+      "expected_verdict": null,
+      "min_confidence": 0.0,
+      "must_cite_any": [],
+      "must_mention_any": ["insufficient", "not", "cannot", "predict", "unable", "does not", "future"],
+      "must_not_contain": ["yes, China will", "no, China will not", "definitely will"]
+    },
+    {
+      "id": "unanswerable_003",
+      "category": "unanswerable",
+      "_note": "expected_verdict omitted: a smart refusal passes verification; content checks (refusal keywords + no fabricated numbers) do the real work.",
+      "question": "What is Kennametal's annual revenue from tungsten products in 2025?",
+      "expected_verdict": null,
+      "min_confidence": 0.0,
+      "must_cite_any": [],
+      "must_mention_any": ["insufficient", "not", "cannot", "does not", "unable", "unknown", "no specific"],
+      "must_not_contain": ["$1 billion", "$500 million", "exactly"]
+    },
+    {
+      "id": "unanswerable_004",
+      "category": "unanswerable",
+      "_note": "expected_verdict omitted: a smart refusal passes verification; content checks (refusal keywords + no fabricated numbers) do the real work.",
+      "question": "What is the classified size of the DoD's strategic tungsten reserve?",
+      "expected_verdict": null,
+      "min_confidence": 0.0,
+      "must_cite_any": [],
+      "must_mention_any": ["classified", "not", "cannot", "insufficient", "unavailable", "does not"],
+      "must_not_contain": []
+    },
+    {
+      "id": "unanswerable_005",
+      "category": "unanswerable",
+      "_note": "expected_verdict omitted: a smart refusal passes verification; content checks (refusal keywords + no fabricated numbers) do the real work.",
+      "question": "What is the GDP impact of a complete Chinese rare earths embargo on the U.S.?",
+      "expected_verdict": null,
+      "min_confidence": 0.0,
+      "must_cite_any": [],
+      "must_mention_any": ["insufficient", "not", "cannot", "does not", "unable", "no specific"],
+      "must_not_contain": ["GDP would fall by", "impact would be exactly"]
+    }
+  ]
+}

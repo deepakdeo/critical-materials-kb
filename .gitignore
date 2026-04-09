@@ -51,3 +51,6 @@ build_journal.md
 
 # mypy
 .mypy_cache/
+
+# Eval runs — detailed results are local artifacts (golden_set.json is checked in)
+eval/results/

@@ -14,7 +14,34 @@ from src.retrieval.vector_retriever import RetrievalResult
 
 logger = logging.getLogger(__name__)
 
+# Default Cohere rerank model to use when RERANKER_MODEL is unset or still
+# references a legacy local cross-encoder name (e.g. "cross-encoder/...")
+# from pre-Cohere-swap .env files.
+_DEFAULT_COHERE_MODEL = "rerank-english-v3.0"
+
 _client: cohere.Client | None = None
+
+
+def _resolve_model() -> str:
+    """Return a valid Cohere rerank model ID.
+
+    If the configured reranker model looks like a legacy local cross-encoder
+    (from an old .env file that predates the Cohere swap), fall back to the
+    default Cohere model and warn once. This prevents a confusing 404 from
+    the Cohere API when users forget to update their .env.
+    """
+    configured = settings.reranker_model or ""
+    if configured.startswith("cross-encoder/") or "/" not in configured:
+        if configured and configured != _DEFAULT_COHERE_MODEL:
+            logger.warning(
+                "RERANKER_MODEL=%r looks like a legacy cross-encoder name; "
+                "falling back to Cohere default %r. Update your .env to "
+                "silence this warning.",
+                configured,
+                _DEFAULT_COHERE_MODEL,
+            )
+        return _DEFAULT_COHERE_MODEL
+    return configured
 
 
 def _get_client() -> cohere.Client:
@@ -61,7 +88,7 @@ def rerank(
         query=query,
         documents=documents,
         top_n=k,
-        model=settings.reranker_model,
+        model=_resolve_model(),
     )
 
     scored_results: list[RetrievalResult] = []
