@@ -21,6 +21,13 @@ body {
 .dark ::-webkit-scrollbar-thumb { background: #475569; }
 
 /* Markdown content styling */
+.answer-content {
+  /* Let long URLs and source filenames wrap instead of blowing out
+     the container on narrow viewports. `anywhere` is the right
+     choice here — we want to keep text readable over pixel-perfect
+     word boundaries when the alternative is horizontal scroll. */
+  overflow-wrap: anywhere;
+}
 .answer-content h1, .answer-content h2, .answer-content h3 {
   font-weight: 600;
   margin-top: 1em;

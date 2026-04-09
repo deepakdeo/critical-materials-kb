@@ -2,7 +2,7 @@
 
 import logging
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
 from src.api.models import (
     QueryRequest,
@@ -10,6 +10,7 @@ from src.api.models import (
     SourceResponse,
     VerificationResponse,
 )
+from src.api.rate_limit import check_rate_limit
 from src.generation.chains import query as run_query
 
 logger = logging.getLogger(__name__)
@@ -17,7 +18,11 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.post("/query", response_model=QueryResponseModel)
+@router.post(
+    "/query",
+    response_model=QueryResponseModel,
+    dependencies=[Depends(check_rate_limit)],
+)
 def query_endpoint(request: QueryRequest) -> QueryResponseModel:
     """Execute a RAG query and return a cited answer.
 

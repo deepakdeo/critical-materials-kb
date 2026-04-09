@@ -104,7 +104,7 @@ function SourcesList({ sources, expanded, onToggle, highlightIndex, expandedChun
                 onClick={() => onToggleChunk(i)}
               >
                 <SourceIcon name={s.name} />
-                <div className="min-w-0 flex-1">
+                <div className="min-w-0 flex-1 break-words">
                   <span className="font-medium text-slate-700 dark:text-slate-300">{s.name}</span>
                   {s.page && <span className="ml-1.5 text-slate-500 dark:text-slate-400">{s.page}</span>}
                   {s.section && s.section !== 'Knowledge Graph' && (

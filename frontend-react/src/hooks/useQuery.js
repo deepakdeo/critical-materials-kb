@@ -27,7 +27,21 @@ export function useQuery() {
       })
 
       if (!res.ok) {
-        throw new Error(`API error: ${res.status} ${res.statusText}`)
+        // Try to surface the server-provided detail (e.g. the
+        // friendly 429 rate-limit message) instead of a generic
+        // "API error: 429" that gives the user no guidance.
+        let detail = null
+        try {
+          const body = await res.json()
+          detail = body?.detail
+        } catch { /* body wasn't JSON — fall through to generic */ }
+
+        if (res.status === 429) {
+          throw new Error(
+            detail || 'Too many requests. Please wait a few minutes before trying again.'
+          )
+        }
+        throw new Error(detail || `API error: ${res.status} ${res.statusText}`)
       }
 
       const data = await res.json()
