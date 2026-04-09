@@ -14,6 +14,11 @@ from src.retrieval.hybrid_retriever import hybrid_search
 from src.retrieval.query_classifier import QueryType, classify_query
 from src.retrieval.reranker import rerank
 from src.retrieval.vector_retriever import RetrievalResult
+from src.store.query_cache import (
+    get_cached_response,
+    make_cache_key,
+    set_cached_response,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -298,6 +303,23 @@ def query(
     """
     start_time = time.time()
 
+    # Cache lookup — skip for multi-turn queries because prior turns
+    # change the meaning of the current question and we don't want a
+    # standalone "What about rare earths?" to serve the cached response
+    # of a different conversation.
+    cache_key: str | None = None
+    if not conversation_context:
+        cache_key = make_cache_key(question, materials, doc_types)
+        cached = get_cached_response(cache_key)
+        if cached is not None:
+            logger.info("Cache HIT: %s", question[:80])
+            cached_response = QueryResponse(**cached)
+            cached_response.metadata["from_cache"] = True
+            cached_response.metadata["latency_ms"] = int(
+                (time.time() - start_time) * 1000
+            )
+            return cached_response
+
     # Enrich question with conversation context for multi-turn
     enriched_question = question
     if conversation_context:
@@ -413,6 +435,7 @@ def query(
             "latency_ms": elapsed_ms,
             "confidence": round(confidence, 2),
             "is_fallback": is_fallback,
+            "from_cache": False,
         },
     )
 
@@ -422,4 +445,13 @@ def query(
         query_type.value, chunks_retrieved, chunks_after_rerank,
         verification.verdict, confidence, elapsed_ms,
     )
+
+    # Cache write — only when we have a key (i.e. not a multi-turn
+    # query) and only for responses that didn't fall into the graceful
+    # fallback path. A fallback answer is "we don't have enough data";
+    # caching that would mean a future corpus update couldn't fix it
+    # for 24 hours.
+    if cache_key is not None and not is_fallback:
+        set_cached_response(cache_key, question, response.model_dump())
+
     return response
