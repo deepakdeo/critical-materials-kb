@@ -6,7 +6,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-from src.api.source_urls import get_source_url
+from src.api.source_urls import get_source_url_with_page
 from src.generation.generator import generate_answer, generate_fallback_answer
 from src.generation.verifier import VerificationResult, verify_answer
 from src.retrieval.graph_retriever import graph_search
@@ -75,7 +75,7 @@ def _build_sources(chunks: list[RetrievalResult]) -> list[SourceReference]:
                 section=chunk.section_title or "",
                 relevance_score=round(chunk.score, 4),
                 chunk_text=chunk.text[:500] if chunk.text else "",
-                source_url=get_source_url(source_name),
+                source_url=get_source_url_with_page(source_name, pages),
             ))
     return sources
 

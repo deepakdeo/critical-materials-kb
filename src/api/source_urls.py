@@ -102,6 +102,42 @@ def get_source_url(filename: str) -> str | None:
     return SOURCE_URL_MAP.get(filename)
 
 
+def get_source_url_with_page(
+    filename: str, page_numbers: list[int] | None = None,
+) -> str | None:
+    """Get the public URL for a source document, deep-linked to a page.
+
+    When the source is a direct PDF URL and the chunk has a known page
+    number, appends a `#page=N` fragment. Chromium, Firefox, and Safari
+    PDF viewers all honor this fragment and jump straight to the page,
+    which gives analysts a one-click path from a cited chunk to the
+    exact page they need to verify.
+
+    For non-PDF sources (HTML landing pages, company sites, etc.) the
+    base URL is returned unchanged — there's no equivalent standard for
+    HTML deep-linking.
+
+    Args:
+        filename: The document filename as stored in Supabase.
+        page_numbers: Optional list of 1-indexed page numbers from the
+            chunk's metadata. The first page is used as the anchor.
+
+    Returns:
+        Public URL string (possibly with #page=N appended), or None if
+        no URL is known for the filename.
+    """
+    base_url = SOURCE_URL_MAP.get(filename)
+    if not base_url:
+        return None
+    if not page_numbers:
+        return base_url
+    # Only append a page fragment if the base URL points directly at a PDF.
+    # HTML company sites / press releases don't support deep page anchors.
+    if not base_url.lower().endswith(".pdf"):
+        return base_url
+    return f"{base_url}#page={page_numbers[0]}"
+
+
 def get_all_sources() -> list[dict]:
     """Get all source documents with their URLs.
 

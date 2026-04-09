@@ -70,6 +70,13 @@ function SourceIcon({ name }) {
   )
 }
 
+/** Parse "p.204" or "p.199,200" into the first page number, or null. */
+function extractFirstPage(pageStr) {
+  if (!pageStr) return null
+  const match = pageStr.match(/p\.(\d+)/)
+  return match ? parseInt(match[1], 10) : null
+}
+
 function SourcesList({ sources, expanded, onToggle, highlightIndex, expandedChunk, onToggleChunk }) {
   if (!sources || sources.length === 0) return null
 
@@ -131,11 +138,39 @@ function SourcesList({ sources, expanded, onToggle, highlightIndex, expandedChun
                   </svg>
                 )}
               </div>
-              {/* Chunk text preview */}
+              {/* Chunk text preview + deep-link to original PDF page */}
               {expandedChunk === i && s.chunk_text && (
                 <div className="ml-7 mt-1 mb-2 px-3 py-2 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs text-slate-600 dark:text-slate-400 leading-relaxed border-l-2 border-blue-300 dark:border-blue-600">
-                  {s.chunk_text}
-                  {s.chunk_text.length >= 500 && <span className="text-slate-400">...</span>}
+                  <div className="whitespace-pre-wrap">
+                    {s.chunk_text}
+                    {s.chunk_text.length >= 500 && <span className="text-slate-400">...</span>}
+                  </div>
+                  {s.source_url && s.source_url.includes('#page=') && (
+                    <a
+                      href={s.source_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-medium transition-colors"
+                    >
+                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                      Open page {extractFirstPage(s.page)} in source PDF
+                    </a>
+                  )}
+                  {s.source_url && !s.source_url.includes('#page=') && s.name !== 'Knowledge Graph' && (
+                    <a
+                      href={s.source_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 text-[11px] font-medium transition-colors"
+                    >
+                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                      Open original source
+                    </a>
+                  )}
                 </div>
               )}
             </div>
