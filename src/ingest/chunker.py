@@ -2,6 +2,7 @@
 
 import logging
 import re
+from functools import lru_cache
 
 import tiktoken
 from pydantic import BaseModel, Field
@@ -11,7 +12,25 @@ from src.ingest.loader import LoadedDocument
 
 logger = logging.getLogger(__name__)
 
-_tokenizer = tiktoken.get_encoding("cl100k_base")
+
+@lru_cache(maxsize=1)
+def _get_tokenizer() -> tiktoken.Encoding:
+    """Lazily load the tiktoken BPE encoding.
+
+    tiktoken downloads its merges file from a public blob store on
+    first use. Doing that at module import time means every process
+    that transitively imports chunker — including the FastAPI server,
+    which never actually chunks documents — has to succeed a network
+    call before it can start. On Render this bit us with a DNS
+    resolution failure during a cold boot, crashing the whole
+    container at import time.
+
+    Lazy loading keeps the tokenizer out of the critical import path
+    for the API and only materializes it when ingestion code actually
+    needs it. `lru_cache(maxsize=1)` gives us the same singleton
+    behavior the module-level binding used to provide.
+    """
+    return tiktoken.get_encoding("cl100k_base")
 
 
 class Chunk(BaseModel):
@@ -38,17 +57,17 @@ def count_tokens(text: str) -> int:
     Returns:
         Number of tokens.
     """
-    return len(_tokenizer.encode(text))
+    return len(_get_tokenizer().encode(text))
 
 
 def _decode_tokens(tokens: list[int]) -> str:
     """Decode a list of token IDs back to text."""
-    return _tokenizer.decode(tokens)
+    return _get_tokenizer().decode(tokens)
 
 
 def _encode(text: str) -> list[int]:
     """Encode text to token IDs."""
-    return _tokenizer.encode(text)
+    return _get_tokenizer().encode(text)
 
 
 def _is_heading(line: str) -> bool:
