@@ -7,7 +7,7 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 from src.api.source_urls import get_source_url
-from src.generation.generator import generate_answer
+from src.generation.generator import generate_answer, generate_fallback_answer
 from src.generation.verifier import VerificationResult, verify_answer
 from src.retrieval.graph_retriever import graph_search
 from src.retrieval.hybrid_retriever import hybrid_search
@@ -315,6 +315,7 @@ def query(
 
     # Step 1: Classify query
     query_type = classify_query(question)
+    is_fallback = False
 
     # Step 2: Determine doc_type filter
     doc_type_filter = None
@@ -369,14 +370,21 @@ def query(
         verification = verify_answer(answer=answer, chunks=reranked_retry)
 
         if verification.verdict == "FAIL" and verification.severity == "major":
-            answer = (
-                "The available documents do not contain sufficient "
-                "information to answer this question with the required "
-                "level of confidence. "
-                f"Verification issues: {'; '.join(verification.issues)}"
+            # Corrective fallback: instead of a blunt "insufficient data"
+            # message, generate a structured response that reports what the
+            # corpus DOES cover, suggests reformulated questions, and points
+            # to the most relevant source documents.
+            logger.warning(
+                "Verification FAILED again — generating graceful fallback"
+            )
+            answer = generate_fallback_answer(
+                question=question,
+                chunks=reranked_retry,
+                verification_issues=verification.issues,
             )
             reranked = reranked_retry
             chunks_after_rerank = len(reranked)
+            is_fallback = True
 
     # Build enriched response
     elapsed_ms = int((time.time() - start_time) * 1000)
@@ -404,6 +412,7 @@ def query(
             "chunks_after_rerank": chunks_after_rerank,
             "latency_ms": elapsed_ms,
             "confidence": round(confidence, 2),
+            "is_fallback": is_fallback,
         },
     )
 

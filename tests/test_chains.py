@@ -1,9 +1,6 @@
 """Tests for the chains module — source building, graph data extraction, confidence."""
 
 from src.generation.chains import (
-    GraphEdge,
-    GraphNode,
-    SourceReference,
     _build_sources,
     _compute_confidence,
     _extract_graph_data,

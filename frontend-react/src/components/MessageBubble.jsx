@@ -260,6 +260,18 @@ export default function MessageBubble({ message, onFollowUp, dark }) {
     <div className="flex justify-start">
       <div className="max-w-3xl w-full">
         <div className="px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl rounded-bl-md">
+          {/* Fallback banner — shown when CRAG verification fails and the
+              system returned a corpus-gap explanation instead of an answer */}
+          {metadata?.is_fallback && (
+            <div className="mb-3 px-3 py-2 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-xs text-amber-900 dark:text-amber-200 flex items-start gap-2">
+              <span className="mt-0.5">⚠</span>
+              <div>
+                <div className="font-semibold">This question could not be answered with high confidence.</div>
+                <div className="mt-0.5 opacity-90">The response below explains what the corpus does cover on this topic and suggests reformulations you can try.</div>
+              </div>
+            </div>
+          )}
+
           {/* Answer */}
           <div className="answer-content text-sm text-slate-800 dark:text-slate-200">
             <ReactMarkdown components={markdownComponents}>{content}</ReactMarkdown>

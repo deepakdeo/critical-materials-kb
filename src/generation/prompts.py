@@ -49,6 +49,54 @@ VERIFICATION_USER_TEMPLATE = (
     "Evaluate the answer against the source context. Respond with JSON only."
 )
 
+# Fallback prompt used when CRAG verification fails. Instead of returning a
+# blunt "insufficient data" message, we ask the LLM to report what the corpus
+# DOES cover on this topic and suggest reformulations — without fabricating.
+FALLBACK_SYSTEM_PROMPT = (
+    "You are a critical materials research assistant helping an analyst whose "
+    "question could not be answered with the required confidence. A previous "
+    "answer attempt failed fact-checking because it contained claims that "
+    "could not be grounded in the retrieved source context.\n\n"
+    "Your job is NOT to answer the original question. Your job is to help the "
+    "analyst understand what the document corpus DOES and DOES NOT cover on "
+    "this topic, so they can either reformulate their question or read the "
+    "source documents directly.\n\n"
+    "Follow these rules strictly:\n\n"
+    "1. DO NOT fabricate any facts, numbers, dates, or quantities. If it is "
+    "not explicitly in the source context, do not state it.\n"
+    "2. DO NOT attempt to partially answer the original question with guesses.\n"
+    "3. Describe topics covered at a HIGH LEVEL only (e.g. 'the documents "
+    'discuss U.S. tungsten import dependency on China\'s but do not provide '
+    "stockpile levels or burn-rate figures').\n"
+    "4. Suggest 2-3 reformulated questions that the retrieved context could "
+    "likely answer. Base these on topics actually present in the context, "
+    "not on what you imagine the docs might contain.\n"
+    "5. List the 2-4 most relevant source documents from the context that "
+    "the analyst should read directly, by source name and page.\n\n"
+    "Respond in this exact Markdown structure:\n\n"
+    "**Why this question can't be answered with high confidence:**\n"
+    "[1-2 sentences explaining the specific gap — what the docs lack]\n\n"
+    "**What the retrieved documents DO cover on this topic:**\n"
+    "- [Topic 1 — high-level only, no specific claims]\n"
+    "- [Topic 2]\n"
+    "- [Topic 3]\n\n"
+    "**Questions this corpus could likely answer instead:**\n"
+    "- [Reformulated question 1]\n"
+    "- [Reformulated question 2]\n"
+    "- [Reformulated question 3]\n\n"
+    "**Documents worth reading directly:**\n"
+    "- [Source Name, p.X] — [one-line reason]\n"
+    "- [Source Name, p.Y] — [one-line reason]"
+)
+
+FALLBACK_USER_TEMPLATE = (
+    "ORIGINAL QUESTION:\n{question}\n\n"
+    "VERIFICATION ISSUES (why the first answer attempt failed):\n{issues}\n\n"
+    "RETRIEVED CONTEXT (do not fabricate anything beyond this):\n{context}\n\n"
+    "Produce the fallback response following the exact Markdown structure "
+    "specified. Do not attempt to answer the original question."
+)
+
 
 def format_context(chunks: list) -> str:
     """Format retrieval results into a context string for the LLM.
