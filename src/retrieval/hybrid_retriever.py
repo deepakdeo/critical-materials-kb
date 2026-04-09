@@ -1,10 +1,14 @@
 """Hybrid retrieval: vector + BM25 merged via Reciprocal Rank Fusion (RRF)."""
 
 import logging
+import re
+from functools import lru_cache
 
 from src.config import settings
 from src.retrieval.bm25_retriever import bm25_search
 from src.retrieval.vector_retriever import RetrievalResult, vector_search
+from src.store.metadata_store import list_documents
+from src.store.vector_store import get_chunks_by_document_id
 
 logger = logging.getLogger(__name__)
 
@@ -13,6 +17,137 @@ logger = logging.getLogger(__name__)
 # drowned out when large docs (500+ chunks) dominate both retrievers and win
 # the RRF double-scoring contest.
 BM25_GUARANTEED_FLOOR = 5
+
+# Doc-title boost: match query tokens against tokens extracted from document
+# filenames. Helps named-entity queries reach the right small doc when BM25
+# tokenization misses on phrases ("Fireweed MacTung", "battery minerals").
+_TOKEN_RE = re.compile(r"[a-zA-Z]{4,}")
+
+# Tokens that appear in doc filenames but don't disambiguate between docs
+# (corpus boilerplate, common acronyms, generic words). These get filtered
+# from both query tokenization and doc-name tokenization.
+_GENERIC_TOKENS: frozenset[str] = frozenset({
+    # File extensions and document boilerplate
+    "html", "pdf", "report", "final", "rule", "page",
+    "about", "overview", "brief", "fact", "sheet",
+    # Source-organization acronyms (appear in many doc names)
+    "doe", "gao", "usgs", "ncsc", "dpa", "dfars", "ndaa", "crs",
+    # Common English query/connector words that survive the length filter
+    "which", "what", "where", "when", "have", "been", "made", "from",
+    "with", "this", "that", "they", "them", "their", "would", "could",
+    "should", "does", "into", "than", "then", "such", "some", "more",
+    "most", "many", "much", "also", "only", "very", "much",
+})
+
+# Per-doc title-token cache: document_id -> set of distinctive tokens.
+# Built lazily on first call from list_documents().
+
+
+def _extract_tokens(text: str) -> set[str]:
+    """Extract content-bearing tokens from a string (query or filename)."""
+    return {
+        t for t in _TOKEN_RE.findall(text.lower())
+        if t not in _GENERIC_TOKENS
+    }
+
+
+@lru_cache(maxsize=1)
+def _build_doc_title_index() -> list[tuple[str, frozenset[str]]]:
+    """Build a list of (document_id, title_tokens) for all corpus docs.
+
+    Cached for the process lifetime: the document set doesn't change between
+    queries in a running API process. Tests can clear the cache by calling
+    _build_doc_title_index.cache_clear().
+    """
+    try:
+        docs = list_documents(limit=500)
+    except Exception as e:
+        logger.warning("Doc title index build failed: %s", e)
+        return []
+
+    index: list[tuple[str, frozenset[str]]] = []
+    for doc in docs:
+        doc_id = doc.get("id", "")
+        name = doc.get("name", "")
+        if not doc_id or not name:
+            continue
+        tokens = _extract_tokens(name)
+        if tokens:
+            index.append((doc_id, frozenset(tokens)))
+    return index
+
+
+def _doc_title_boost(
+    query: str,
+    max_docs: int = 3,
+    chunks_per_doc: int = 4,
+) -> list[RetrievalResult]:
+    """Surface chunks from docs whose filename overlaps with query tokens.
+
+    Scores each doc by how many distinctive tokens its filename shares with
+    the query, then fetches a few chunks from the top-scoring docs and
+    returns them for inclusion in the rerank candidate pool. The reranker
+    decides whether they actually beat the existing candidates.
+
+    Args:
+        query: The user's query string.
+        max_docs: Hard cap on docs to inject (avoids ballooning the pool).
+        chunks_per_doc: How many leading chunks to pull per matched doc.
+
+    Returns:
+        RetrievalResult list (possibly empty). Score is set to the overlap
+        count so the rerank pool can debug-display the boost source.
+    """
+    query_tokens = _extract_tokens(query)
+    if not query_tokens:
+        return []
+
+    index = _build_doc_title_index()
+    if not index:
+        return []
+
+    # Score docs by token overlap
+    scored: list[tuple[int, str]] = []
+    for doc_id, doc_tokens in index:
+        overlap = len(query_tokens & doc_tokens)
+        if overlap > 0:
+            scored.append((overlap, doc_id))
+
+    if not scored:
+        return []
+
+    # Highest-overlap docs first, take top max_docs
+    scored.sort(reverse=True)
+    top_docs = scored[:max_docs]
+
+    results: list[RetrievalResult] = []
+    for overlap, doc_id in top_docs:
+        try:
+            rows = get_chunks_by_document_id(doc_id, limit=chunks_per_doc)
+        except Exception as e:
+            logger.warning(
+                "Doc title boost: chunk fetch failed for %s: %s", doc_id, e
+            )
+            continue
+        for row in rows:
+            results.append(RetrievalResult(
+                chunk_id=str(row.get("id", "")),
+                document_id=str(row.get("document_id", "")),
+                text=row.get("text", ""),
+                section_title=row.get("section_title", ""),
+                page_numbers=row.get("page_numbers", []),
+                materials=row.get("materials", []),
+                metadata=row.get("metadata", {}),
+                score=float(overlap),
+                source="title_boost",
+            ))
+
+    if results:
+        logger.info(
+            "Doc title boost: %d doc(s) matched, %d chunk(s) added",
+            len(top_docs), len(results),
+        )
+    return results
 
 
 def reciprocal_rank_fusion(
@@ -109,13 +244,25 @@ def hybrid_search(
             final_ids.add(bm25_result.chunk_id)
             rescued += 1
 
+    # Doc-title boost: if the query mentions tokens from a doc filename
+    # (e.g., "Fireweed MacTung" → dpa-fireweed-mactung-2024.html), seed the
+    # candidate pool with chunks from those docs. The reranker decides
+    # whether they actually win against the existing candidates.
+    boosted = 0
+    for boost_result in _doc_title_boost(query):
+        if boost_result.chunk_id and boost_result.chunk_id not in final_ids:
+            final.append(boost_result)
+            final_ids.add(boost_result.chunk_id)
+            boosted += 1
+
     logger.info(
         "Hybrid search: %d vector + %d BM25 → %d merged → %d final "
-        "(%d BM25 rescued below RRF cutoff)",
+        "(%d BM25 rescued, %d title-boosted)",
         len(vector_results),
         len(bm25_results),
         len(merged),
         len(final),
         rescued,
+        boosted,
     )
     return final

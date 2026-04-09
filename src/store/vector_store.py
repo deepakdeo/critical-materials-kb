@@ -107,6 +107,34 @@ def similarity_search(
     return result.data
 
 
+def get_chunks_by_document_id(
+    document_id: str,
+    limit: int = 10,
+) -> list[dict[str, Any]]:
+    """Fetch the first N chunks for a given document, ordered by chunk_index.
+
+    Used by the doc-title boost path in hybrid retrieval to seed the
+    candidate pool with chunks from a specifically-named document.
+
+    Args:
+        document_id: UUID of the parent document.
+        limit: Maximum chunks to return.
+
+    Returns:
+        List of chunk records (same shape as similarity_search results).
+    """
+    client = _get_client()
+    result = (
+        client.table("chunks")
+        .select("*")
+        .eq("document_id", document_id)
+        .order("chunk_index")
+        .limit(limit)
+        .execute()
+    )
+    return result.data
+
+
 def delete_by_document_id(document_id: str) -> int:
     """Delete all chunks belonging to a document.
 

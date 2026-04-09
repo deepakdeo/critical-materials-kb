@@ -1,13 +1,40 @@
-"""Tests for the hybrid retriever's RRF merge and BM25 rescue behavior."""
+"""Tests for the hybrid retriever's RRF merge, BM25 rescue, and title boost."""
 
 from unittest.mock import patch
 
+import pytest
+
 from src.retrieval.hybrid_retriever import (
     BM25_GUARANTEED_FLOOR,
+    _build_doc_title_index,
+    _doc_title_boost,
+    _extract_tokens,
     hybrid_search,
     reciprocal_rank_fusion,
 )
 from src.retrieval.vector_retriever import RetrievalResult
+
+
+@pytest.fixture(autouse=True)
+def _clear_doc_title_cache():
+    """Each test starts with a clean doc-title index cache."""
+    _build_doc_title_index.cache_clear()
+    yield
+    _build_doc_title_index.cache_clear()
+
+
+@pytest.fixture(autouse=True)
+def _stub_doc_title_boost():
+    """Default to a no-op title boost so RRF/rescue tests don't hit Supabase.
+
+    Tests that specifically exercise the boost path patch list_documents
+    + get_chunks_by_document_id directly and can do so inside their own
+    patch contexts (this autouse stub still covers the default path).
+    """
+    with patch(
+        "src.retrieval.hybrid_retriever._doc_title_boost", return_value=[]
+    ):
+        yield
 
 
 def _mk(chunk_id: str, source: str = "vector", score: float = 0.5) -> RetrievalResult:
@@ -116,3 +143,154 @@ class TestHybridSearchBm25Floor:
     def test_default_floor_constant_is_reasonable(self) -> None:
         """Sanity check: the default floor is a small positive integer."""
         assert 1 <= BM25_GUARANTEED_FLOOR <= 10
+
+
+class TestExtractTokens:
+    def test_drops_short_tokens(self) -> None:
+        # 3-char tokens like "the", "iii", "and" are below the length floor
+        assert _extract_tokens("the III tungsten") == {"tungsten"}
+
+    def test_drops_generic_tokens(self) -> None:
+        # "html" is in the generic boilerplate set
+        assert "html" not in _extract_tokens("dpa-fireweed-mactung.html")
+
+    def test_drops_source_acronyms(self) -> None:
+        # "doe", "gao", "dpa" don't disambiguate between corpus docs
+        tokens = _extract_tokens("doe gao dpa report on tungsten")
+        assert "doe" not in tokens
+        assert "gao" not in tokens
+        assert "dpa" not in tokens
+        assert "tungsten" in tokens
+
+    def test_keeps_distinctive_words(self) -> None:
+        tokens = _extract_tokens("Fireweed Metals MacTung project")
+        assert "fireweed" in tokens
+        assert "mactung" in tokens
+        assert "metals" in tokens
+
+    def test_lowercases(self) -> None:
+        assert _extract_tokens("FIREWEED") == {"fireweed"}
+
+
+class TestDocTitleBoost:
+    """The fix that routes named-entity queries to the right small doc."""
+
+    @staticmethod
+    def _fake_docs() -> list[dict]:
+        return [
+            {"id": "doc-fireweed", "name": "dpa-fireweed-mactung-2024.html"},
+            {"id": "doc-battery", "name": "dpa-battery-minerals-2022.html"},
+            {"id": "doc-doe-battery", "name": "doe-battery-supply-chain-review-2024.pdf"},
+            {"id": "doc-mcs", "name": "mcs2025.pdf"},  # no alpha tokens
+            {"id": "doc-kennametal", "name": "kennametal-tungsten-powders.html"},
+        ]
+
+    @staticmethod
+    def _fake_chunk(doc_id: str, idx: int) -> dict:
+        return {
+            "id": f"{doc_id}-chunk-{idx}",
+            "document_id": doc_id,
+            "text": f"text from {doc_id}",
+            "section_title": "",
+            "page_numbers": [],
+            "materials": [],
+            "metadata": {},
+        }
+
+    def test_query_with_distinctive_tokens_routes_to_right_doc(self) -> None:
+        """'Fireweed MacTung' must surface the dpa-fireweed-mactung doc."""
+        with (
+            patch(
+                "src.retrieval.hybrid_retriever.list_documents",
+                return_value=self._fake_docs(),
+            ),
+            patch(
+                "src.retrieval.hybrid_retriever.get_chunks_by_document_id"
+            ) as mock_get,
+        ):
+            mock_get.side_effect = lambda doc_id, limit: [
+                self._fake_chunk(doc_id, i) for i in range(limit)
+            ]
+            results = _doc_title_boost(
+                "Which materials does Fireweed Metals' MacTung project produce?",
+                max_docs=3,
+                chunks_per_doc=2,
+            )
+
+        result_doc_ids = {r.document_id for r in results}
+        assert "doc-fireweed" in result_doc_ids
+        # MCS has no alpha tokens, must NOT be matched
+        assert "doc-mcs" not in result_doc_ids
+
+    def test_multi_token_overlap_outranks_single_token(self) -> None:
+        """'battery minerals' (2 tokens in dpa-battery-minerals) wins over
+        the doe-battery doc (only 1 token overlap)."""
+        captured_doc_ids: list[str] = []
+
+        def fake_get(doc_id, limit):
+            captured_doc_ids.append(doc_id)
+            return [self._fake_chunk(doc_id, 0)]
+
+        with (
+            patch(
+                "src.retrieval.hybrid_retriever.list_documents",
+                return_value=self._fake_docs(),
+            ),
+            patch(
+                "src.retrieval.hybrid_retriever.get_chunks_by_document_id",
+                side_effect=fake_get,
+            ),
+        ):
+            _doc_title_boost(
+                "Which DPA Title III awards for critical battery minerals?",
+                max_docs=2,
+            )
+
+        # The 2-overlap doc must come first (we sort by overlap desc)
+        assert captured_doc_ids[0] == "doc-battery"
+
+    def test_no_overlap_returns_empty(self) -> None:
+        with (
+            patch(
+                "src.retrieval.hybrid_retriever.list_documents",
+                return_value=self._fake_docs(),
+            ),
+            patch(
+                "src.retrieval.hybrid_retriever.get_chunks_by_document_id",
+                return_value=[],
+            ),
+        ):
+            results = _doc_title_boost("What is the weather today?")
+        assert results == []
+
+    def test_max_docs_caps_pool_growth(self) -> None:
+        """max_docs prevents an over-broad query from injecting many docs."""
+        with (
+            patch(
+                "src.retrieval.hybrid_retriever.list_documents",
+                return_value=self._fake_docs(),
+            ),
+            patch(
+                "src.retrieval.hybrid_retriever.get_chunks_by_document_id"
+            ) as mock_get,
+        ):
+            mock_get.return_value = [{
+                "id": "x", "document_id": "y", "text": "",
+                "section_title": "", "page_numbers": [], "materials": [],
+                "metadata": {},
+            }]
+            # query that touches many docs ("battery" hits 2, "tungsten" hits 1)
+            _doc_title_boost(
+                "battery minerals tungsten powders fireweed mactung",
+                max_docs=2,
+            )
+        assert mock_get.call_count == 2
+
+    def test_index_handles_list_documents_failure(self) -> None:
+        """A Supabase outage during cache build returns empty, doesn't crash."""
+        with patch(
+            "src.retrieval.hybrid_retriever.list_documents",
+            side_effect=RuntimeError("supabase down"),
+        ):
+            results = _doc_title_boost("anything")
+        assert results == []
