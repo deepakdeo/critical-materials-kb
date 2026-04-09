@@ -185,17 +185,34 @@ function QueryMetadata({ metadata }) {
   const [expanded, setExpanded] = useState(false)
   if (!metadata) return null
 
+  const fromCache = metadata.from_cache === true
+  const formatLatency = (ms) =>
+    ms < 1000 ? `${ms}ms` : `${(ms / 1000).toFixed(1)}s`
+
   return (
     <div className="mt-2">
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 transition-colors"
-      >
-        <svg className={`w-3.5 h-3.5 transition-transform ${expanded ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-        </svg>
-        Query Details
-      </button>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 transition-colors"
+        >
+          <svg className={`w-3.5 h-3.5 transition-transform ${expanded ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+          Query Details
+        </button>
+        {fromCache && (
+          <span
+            title="This response was served from the 24h Supabase-backed query cache — no LLM calls were made."
+            className="inline-flex items-center gap-1 rounded-full bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800"
+          >
+            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+            </svg>
+            Cached
+          </span>
+        )}
+      </div>
       {expanded && (
         <div className="mt-2 pl-5 flex flex-wrap gap-x-6 gap-y-1 text-xs text-slate-500 dark:text-slate-400">
           {metadata.query_type && (
@@ -222,7 +239,7 @@ function QueryMetadata({ metadata }) {
             <div>
               <span className="text-slate-400 dark:text-slate-500">Latency:</span>{' '}
               <span className="font-medium text-slate-600 dark:text-slate-300">
-                {(metadata.latency_ms / 1000).toFixed(1)}s
+                {formatLatency(metadata.latency_ms)}
               </span>
             </div>
           )}
