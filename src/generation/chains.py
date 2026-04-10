@@ -260,8 +260,15 @@ def _compute_confidence(
     verification: VerificationResult,
     chunks_after_rerank: int,
     retrieval_method: str,
+    is_fallback: bool = False,
 ) -> float:
     """Compute a confidence score 0-1 for the answer."""
+    # Fallback responses are explicit "we can't answer this" — cap low
+    # so the confidence bar doesn't contradict the amber warning banner
+    # and the red FAIL badge.
+    if is_fallback:
+        return 0.3
+
     score = 0.5
 
     # Verification result
@@ -269,6 +276,8 @@ def _compute_confidence(
         score += 0.3
         if verification.severity == "none":
             score += 0.1
+    elif verification.verdict == "FAIL" and verification.severity == "major":
+        score -= 0.2
     elif verification.severity == "minor":
         score += 0.1
 
@@ -282,7 +291,7 @@ def _compute_confidence(
     if "graph" in retrieval_method:
         score += 0.05
 
-    return min(score, 1.0)
+    return max(min(score, 1.0), 0.1)
 
 
 def query(
@@ -414,7 +423,7 @@ def query(
     sources = _build_sources(reranked)
     graph_data = _extract_graph_data(graph_results)
     confidence = _compute_confidence(
-        verification, chunks_after_rerank, retrieval_method
+        verification, chunks_after_rerank, retrieval_method, is_fallback
     )
 
     # Generate follow-up questions (non-blocking best-effort)
