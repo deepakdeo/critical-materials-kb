@@ -256,11 +256,35 @@ def _generate_follow_ups(
         return []
 
 
+_HEDGING_PHRASES = [
+    "limited information",
+    "do not contain sufficient information",
+    "does not contain sufficient information",
+    "insufficient information",
+    "not enough information",
+    "cannot fully answer",
+    "can only partially",
+    "partially answer",
+    "no specific information",
+    "not directly address",
+    "do not directly address",
+    "does not directly address",
+    "not contain enough information",
+]
+
+
+def _detect_hedging(answer: str) -> bool:
+    """Return True if the answer contains self-hedging language."""
+    lower = answer.lower()
+    return any(phrase in lower for phrase in _HEDGING_PHRASES)
+
+
 def _compute_confidence(
     verification: VerificationResult,
     chunks_after_rerank: int,
     retrieval_method: str,
     is_fallback: bool = False,
+    answer: str = "",
 ) -> float:
     """Compute a confidence score 0-1 for the answer."""
     # Fallback responses are explicit "we can't answer this" — cap low
@@ -290,6 +314,14 @@ def _compute_confidence(
     # Graph enrichment boosts confidence for relational queries
     if "graph" in retrieval_method:
         score += 0.05
+
+    # If the LLM itself hedges ("limited information", "insufficient
+    # information", etc.), the answer only partially addresses the
+    # question even if every stated fact is grounded. Cap at 0.65 so
+    # the confidence bar reads ~65% Medium rather than a misleading
+    # 90-100% High.
+    if _detect_hedging(answer):
+        score = min(score, 0.65)
 
     return max(min(score, 1.0), 0.1)
 
@@ -423,7 +455,7 @@ def query(
     sources = _build_sources(reranked)
     graph_data = _extract_graph_data(graph_results)
     confidence = _compute_confidence(
-        verification, chunks_after_rerank, retrieval_method, is_fallback
+        verification, chunks_after_rerank, retrieval_method, is_fallback, answer
     )
 
     # Generate follow-up questions (non-blocking best-effort)
