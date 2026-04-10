@@ -300,7 +300,7 @@ export default function MessageBubble({ message, onFollowUp, dark }) {
   if (isUser) {
     return (
       <div className="flex justify-end">
-        <div className="max-w-2xl px-4 py-3 bg-blue-600 text-white rounded-2xl rounded-br-md text-sm leading-relaxed">
+        <div className="max-w-[85%] sm:max-w-2xl px-3 sm:px-4 py-2.5 sm:py-3 bg-blue-600 text-white rounded-2xl rounded-br-md text-sm leading-relaxed break-words">
           {message.content}
         </div>
       </div>
@@ -311,7 +311,7 @@ export default function MessageBubble({ message, onFollowUp, dark }) {
   return (
     <div className="flex justify-start">
       <div className="max-w-3xl w-full">
-        <div className="px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl rounded-bl-md">
+        <div className="px-3 sm:px-4 py-2.5 sm:py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl rounded-bl-md">
           {/* Fallback banner — shown when CRAG verification fails and the
               system returned a corpus-gap explanation instead of an answer */}
           {metadata?.is_fallback && (
@@ -331,7 +331,7 @@ export default function MessageBubble({ message, onFollowUp, dark }) {
 
           {/* Verification + Confidence + Export */}
           {(verification || metadata?.confidence != null) && (
-            <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700 flex flex-wrap items-center gap-3">
+            <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700 flex flex-wrap items-center gap-2 sm:gap-3">
               <VerificationBadge verification={verification} />
               <ConfidenceBar confidence={metadata?.confidence} />
               <div className="flex-1" />

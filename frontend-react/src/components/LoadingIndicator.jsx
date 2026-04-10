@@ -24,7 +24,7 @@ export default function LoadingIndicator() {
 
   const isWarmingUp = elapsed >= 5
   const statusMessage = isWarmingUp
-    ? 'Warming up the backend — first cold start can take up to 60 seconds.'
+    ? 'Warming up the backend — cold start can take up to 60s.'
     : 'Searching documents and knowledge graph...'
 
   return (

@@ -143,7 +143,7 @@ export default function App() {
   const sessionName = deriveSessionName(messages)
 
   return (
-    <div className="flex h-screen bg-white dark:bg-slate-900">
+    <div className="flex h-dvh bg-white dark:bg-slate-900">
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div
@@ -218,7 +218,7 @@ export default function App() {
           {messages.length === 0 ? (
             <WelcomeScreen onSelectQuery={handleSubmit} />
           ) : (
-            <div className="max-w-4xl mx-auto p-4 space-y-4">
+            <div className="max-w-4xl mx-auto p-3 sm:p-4 space-y-3 sm:space-y-4">
               {messages.map(msg => (
                 <MessageBubble
                   key={msg.id}

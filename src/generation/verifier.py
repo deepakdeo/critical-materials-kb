@@ -74,6 +74,7 @@ def verify_answer(
         response = client.messages.create(
             model=model or settings.llm_model,
             max_tokens=1024,
+            temperature=0,
             system=VERIFICATION_SYSTEM_PROMPT,
             messages=[{"role": "user", "content": user_message}],
         )

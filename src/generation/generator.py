@@ -59,6 +59,7 @@ def generate_answer(
     response = client.messages.create(
         model=model or settings.llm_model,
         max_tokens=2048,
+        temperature=0,
         system=GENERATION_SYSTEM_PROMPT,
         messages=[{"role": "user", "content": user_message}],
     )
@@ -125,6 +126,7 @@ def generate_fallback_answer(
         response = client.messages.create(
             model=model or settings.llm_model,
             max_tokens=1024,
+            temperature=0,
             system=FALLBACK_SYSTEM_PROMPT,
             messages=[{"role": "user", "content": user_message}],
         )

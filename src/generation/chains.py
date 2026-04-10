@@ -230,6 +230,7 @@ def _generate_follow_ups(
         response = client.messages.create(
             model=settings.llm_model,
             max_tokens=200,
+            temperature=0,
             messages=[{
                 "role": "user",
                 "content": (
@@ -303,22 +304,22 @@ def query(
     """
     start_time = time.time()
 
-    # Cache lookup — skip for multi-turn queries because prior turns
-    # change the meaning of the current question and we don't want a
-    # standalone "What about rare earths?" to serve the cached response
-    # of a different conversation.
-    cache_key: str | None = None
-    if not conversation_context:
-        cache_key = make_cache_key(question, materials, doc_types)
-        cached = get_cached_response(cache_key)
-        if cached is not None:
-            logger.info("Cache HIT: %s", question[:80])
-            cached_response = QueryResponse(**cached)
-            cached_response.metadata["from_cache"] = True
-            cached_response.metadata["latency_ms"] = int(
-                (time.time() - start_time) * 1000
-            )
-            return cached_response
+    # Cache lookup — keyed on (question, filters) only, ignoring
+    # conversation_context. If someone re-asks the same standalone
+    # question mid-conversation, they should get the same fast cached
+    # answer. Truly context-dependent follow-ups ("tell me more",
+    # "what about nickel?") naturally have different question text and
+    # therefore different cache keys.
+    cache_key = make_cache_key(question, materials, doc_types)
+    cached = get_cached_response(cache_key)
+    if cached is not None:
+        logger.info("Cache HIT: %s", question[:80])
+        cached_response = QueryResponse(**cached)
+        cached_response.metadata["from_cache"] = True
+        cached_response.metadata["latency_ms"] = int(
+            (time.time() - start_time) * 1000
+        )
+        return cached_response
 
     # Enrich question with conversation context for multi-turn
     enriched_question = question
@@ -446,12 +447,10 @@ def query(
         verification.verdict, confidence, elapsed_ms,
     )
 
-    # Cache write — only when we have a key (i.e. not a multi-turn
-    # query) and only for responses that didn't fall into the graceful
-    # fallback path. A fallback answer is "we don't have enough data";
-    # caching that would mean a future corpus update couldn't fix it
-    # for 24 hours.
-    if cache_key is not None and not is_fallback:
+    # Cache write — skip fallback responses ("we don't have enough
+    # data") so a future corpus update can fix them immediately
+    # instead of waiting 24 hours for the cache to expire.
+    if not is_fallback:
         set_cached_response(cache_key, question, response.model_dump())
 
     return response
