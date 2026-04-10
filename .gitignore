@@ -54,3 +54,6 @@ build_journal.md
 
 # Eval runs — detailed results are local artifacts (golden_set.json is checked in)
 eval/results/
+
+# Screenshots (local testing artifacts)
+screenshots_for_testing/
